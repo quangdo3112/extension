@@ -31,7 +31,7 @@ export default class Tabs {
     this.state = state;
   }
 
-  private authorize (url: string, request: MessageAuthorize['payload']): Promise<boolean> {
+  private authorize (url: string, request: MessageAuthorize): Promise<boolean> {
     return this.state.authorizeUrl(url, request);
   }
 
@@ -55,7 +55,7 @@ export default class Tabs {
     return true;
   }
 
-  private extrinsicSign (url: string, request: MessageExtrinsicSign['payload']): Promise<MessageExtrinsicSignResponse> {
+  private extrinsicSign (url: string, request: MessageExtrinsicSign): Promise<MessageExtrinsicSignResponse> {
     const { address } = request;
     const pair = keyring.getPair(address);
 
@@ -64,14 +64,14 @@ export default class Tabs {
     return this.state.signQueue(url, request);
   }
 
-  public async handle<TRequestMessage extends RequestMessage>(id: string, type: TRequestMessage['message'], request: TRequestMessage['payload'], url: string, port: chrome.runtime.Port): Promise<any> {
+  public async handle<TRequestMessage extends RequestMessage>(id: string, type: TRequestMessage['message'], request: TRequestMessage, url: string, port: chrome.runtime.Port): Promise<any> {
     if (type !== 'authorize.tab') {
       this.state.ensureUrlAuthorized(url);
     }
 
     switch (type) {
       case 'authorize.tab':
-        return this.authorize(url, request as MessageAuthorize['payload']);
+        return this.authorize(url, request as MessageAuthorize);
 
       case 'accounts.list':
         return this.accountsList(url);
@@ -80,7 +80,7 @@ export default class Tabs {
         return this.accountsSubscribe(url, id, port);
 
       case 'extrinsic.sign':
-        return this.extrinsicSign(url, request as MessageExtrinsicSign['payload']);
+        return this.extrinsicSign(url, request as MessageExtrinsicSign);
 
       default:
         throw new Error(`Unable to handle message of type ${type}`);

@@ -5,17 +5,125 @@
 import { SignerPayload } from '@polkadot/api/types';
 import { KeypairType } from '@polkadot/util-crypto/types';
 
-export type AuthorizeRequest = [string, MessageAuthorize['payload'], string];
+export type AuthorizeRequest = [string, MessageAuthorize, string];
 
-export type SigningRequest = [string, MessageExtrinsicSign['payload'], string];
+export type SigningRequest = [string, MessageExtrinsicSign, string];
 
-export type RequestMessage = MessageAuthorize | MessageAuthorizeApprove | MessageAuthorizeReject | MessageAuthorizeRequests | MessageAuthorizeSubscribe | MessageAccountCreate | MessageAccountEdit | MessageAccountForget | MessageAccountList | MessageAccountSubscribe | MessageExtrinsicSign | MessageExtrinsicSignApprove | MessageExtrinsicSignCancel | MessageExtrinsicSignRequests | MessageExtrinsicSignSubscribe | MessageSeedCreate | MessageSeedValidate | MessageRpcSend;
-export type ResponseMessage = MessageExtrinsicSignResponse | MessageSeedCreateResponse | MessageSeedValidateResponse;
-export type Message = RequestMessage | ResponseMessage;
+// export type RequestMessage = MessageAuthorize | MessageAuthorizeApprove | MessageAuthorizeReject | MessageAuthorizeRequests | MessageAuthorizeSubscribe | MessageAccountCreate | MessageAccountEdit | MessageAccountForget | MessageAccountList | MessageAccountSubscribe | MessageExtrinsicSign | MessageExtrinsicSignApprove | MessageExtrinsicSignCancel | MessageExtrinsicSignRequests | MessageExtrinsicSignSubscribe | MessageSeedCreate | MessageSeedValidate | MessageRpcSend;
+// export type ResponseMessage = MessageExtrinsicSignResponse | MessageSeedCreateResponse | MessageSeedValidateResponse;
+// export type Message = RequestMessage | ResponseMessage;
 
 // Requests
 
-export type MessageTypes = RequestMessage['message'];
+export type MessageTypes = keyof PayloadTypes; // RequestMessages TODO ?
+
+export interface TransportRequestMessage<TMessageType extends MessageTypes> {
+  id: string,
+  message: TMessageType,
+  origin: 'page' | 'popup',
+  request: PayloadTypes[TMessageType]
+}
+
+export type PayloadTypes = {
+  'authorize.tab': MessageAuthorize,
+  'authorize.approve': MessageAuthorizeApprove
+  'authorize.reject': MessageAuthorizeReject
+  'authorize.requests': MessageAuthorizeRequests
+  'authorize.subscribe': MessageAuthorizeSubscribe
+  'accounts.create': MessageAccountCreate
+  'accounts.edit': MessageAccountEdit
+  'accounts.forget': MessageAccountForget
+  'accounts.list': MessageAccountList
+  'accounts.subscribe': MessageAccountSubscribe
+  'extrinsic.sign': MessageExtrinsicSign
+  'signing.approve': MessageExtrinsicSignApprove
+  'signing.cancel': MessageExtrinsicSignCancel
+  'signing.requests': MessageExtrinsicSignRequests
+  'signing.subscribe': MessageExtrinsicSignSubscribe
+  'seed.create': MessageSeedCreate
+  'seed.validate': MessageSeedValidate
+  'rpc.send': MessageRpcSend
+  'rpc.sendSubscribe': MessageRpcSendSubscribe
+};
+
+type IsNull<T, K extends keyof T> = { [K1 in Exclude<keyof T, K>]: T[K1] } & T[K] extends null ? K : never
+type NullKeys<T> = { [K in keyof T]: IsNull<T, K> }[keyof T]
+export type NullMessageTypes = NullKeys<PayloadTypes>
+
+export type MessageAuthorize = {
+  origin: string;
+}
+
+export type MessageAuthorizeApprove = {
+  id: string;
+}
+
+export type MessageAuthorizeReject = {
+  id: string;
+}
+
+export type MessageAuthorizeRequests = null;
+
+export type MessageAuthorizeSubscribe = null;
+
+export type MessageAccountCreate = {
+  name: string;
+  password: string;
+  suri: string;
+  type?: KeypairType;
+}
+
+export type MessageAccountEdit = {
+  address: string;
+  name: string;
+}
+
+export type MessageAccountForget = {
+  address: string;
+}
+
+export type MessageAccountList = null;
+
+export type MessageAccountSubscribe = null;
+
+export type MessageExtrinsicSign = {
+  payload: SignerPayload
+}
+
+export type MessageExtrinsicSignApprove = {
+  id: string;
+  password: string;
+}
+
+export type MessageExtrinsicSignCancel = {
+  id: string;
+}
+
+export type MessageExtrinsicSignRequests = null;
+
+export type MessageExtrinsicSignSubscribe = null;
+
+export type MessageSeedCreate = {
+  length?: 12 | 24;
+  type?: KeypairType;
+}
+
+export type MessageSeedValidate = {
+  seed: string;
+  type?: KeypairType;
+}
+
+export type MessageRpcSend = {
+  method: string,
+  params?: any[]
+}
+
+export type MessageRpcSendSubscribe = {
+  method: string,
+  params?: any[]
+}
+
+// Responses
 
 type NonNullResponseTypes = {
   'extrinsic.sign': MessageExtrinsicSignResponse,
@@ -26,144 +134,6 @@ type NonNullResponseTypes = {
 export type ResponseTypes = {
   [K in Exclude<MessageTypes, keyof NonNullResponseTypes>]: null;
 } & NonNullResponseTypes;
-
-export interface TransportRequestMessage<TMessage extends RequestMessage> {
-  id: string,
-  message: TMessage['message'], // this still needs to work also
-  origin: 'page' | 'popup',
-  request: TMessage['payload']
-}
-
-// we only ever use the payload. message is for indexing for sendMessage
-export interface MessageAuthorize {
-  message: 'authorize.tab';
-  payload: {
-    origin: string;
-  }
-}
-
-export interface MessageAuthorizeApprove {
-  message: 'authorize.approve';
-  payload: {
-    id: string;
-  }
-}
-
-export interface MessageAuthorizeReject {
-  message: 'authorize.reject';
-  payload: {
-    id: string;
-  }
-}
-
-export interface MessageAuthorizeRequests {
-  message: 'authorize.requests';
-  payload: null;
-}
-
-export interface MessageAuthorizeSubscribe {
-  message: 'authorize.subscribe';
-  payload: null;
-}
-
-export interface MessageAccountCreate {
-  message: 'accounts.create';
-  payload: {
-    name: string;
-    password: string;
-    suri: string;
-    type?: KeypairType;
-  }
-}
-
-export interface MessageAccountEdit {
-  message: 'accounts.edit';
-  payload: {
-    address: string;
-    name: string;
-  }
-}
-
-export interface MessageAccountForget {
-  message: 'accounts.forget';
-  payload: {
-    address: string;
-  }
-}
-
-export interface MessageAccountList {
-  message: 'accounts.list';
-  payload: null
-}
-
-export interface MessageAccountSubscribe {
-  message: 'accounts.subscribe';
-  payload: null
-}
-
-export interface MessageExtrinsicSign {
-  message: 'extrinsic.sign';
-  payload: SignerPayload
-}
-
-export interface MessageExtrinsicSignApprove {
-  message: 'signing.approve';
-  payload: {
-    id: string;
-    password: string;
-  }
-}
-
-export interface MessageExtrinsicSignCancel {
-  message: 'signing.cancel';
-  payload: {
-    id: string;
-  }
-}
-
-export interface MessageExtrinsicSignRequests {
-  message: 'signing.requests';
-  payload: null
-}
-
-export interface MessageExtrinsicSignSubscribe {
-  message: 'signing.subscribe';
-  payload: null
-}
-
-export interface MessageSeedCreate {
-  message: 'seed.create',
-  payload: {
-    length?: 12 | 24;
-    type?: KeypairType;
-  }
-}
-
-export interface MessageSeedValidate {
-  message: 'seed.validate',
-  payload: {
-    seed: string;
-    type?: KeypairType;
-  }
-}
-
-export interface MessageRpcSend {
-  message: 'rpc.send',
-  payload: {
-    method: string,
-    params?: any[]
-  }
-}
-
-export interface MessageRpcSendSubscribe {
-  message: 'rpc.sendSubscribe',
-  payload: {
-    method: string,
-    params?: any[]
-  }
-}
-
-// Responses
 
 export interface TransportSubscriptionNotification {
   subscriptionId: string;

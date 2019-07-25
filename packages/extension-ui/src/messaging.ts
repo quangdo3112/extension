@@ -45,7 +45,7 @@ port.onMessage.addListener((data): void => {
   }
 });
 
-function sendMessage<TRequestMessage extends RequestMessage> (message: TRequestMessage['message'], request: TRequestMessage['payload'] = {}, subscriber?: (data: any) => void): Promise<any> {
+function sendMessage<TRequestMessage extends RequestMessage> (message: TRequestMessage['message'], request: TRequestMessage = {}, subscriber?: (data: any) => void): Promise<any> {
   return new Promise((resolve, reject): void => {
     const id = `${Date.now()}.${++idCounter}`;
 

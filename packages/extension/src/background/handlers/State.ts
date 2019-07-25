@@ -11,7 +11,7 @@ import { assert } from '@polkadot/util';
 interface AuthRequest {
   id: string;
   idStr: string;
-  request: MessageAuthorize['payload'];
+  request: MessageAuthorize;
   resolve: (result: boolean) => void;
   reject: (error: Error) => void;
   url: string;
@@ -27,7 +27,7 @@ type AuthUrls = Record<string, {
 
 interface SignRequest {
   id: string;
-  request: MessageExtrinsicSign['payload'];
+  request: MessageExtrinsicSign;
   resolve: (result: MessageExtrinsicSignResponse) => void;
   reject: (error: Error) => void;
   url: string;
@@ -167,7 +167,7 @@ export default class State {
     this.updateIcon(shouldClose);
   }
 
-  public async authorizeUrl (url: string, request: MessageAuthorize['payload']): Promise<boolean> {
+  public async authorizeUrl (url: string, request: MessageAuthorize): Promise<boolean> {
     const idStr = this.stripUrl(url);
 
     if (this._authUrls[idStr]) {
@@ -210,7 +210,7 @@ export default class State {
     return this._signRequests[id];
   }
 
-  public signQueue (url: string, request: MessageExtrinsicSign['payload']): Promise<MessageExtrinsicSignResponse> {
+  public signQueue (url: string, request: MessageExtrinsicSign): Promise<MessageExtrinsicSignResponse> {
     const id = getId();
 
     return new Promise((resolve, reject): void => {

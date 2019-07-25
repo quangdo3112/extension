@@ -6,7 +6,7 @@ import { injectExtension } from '@polkadot/extension-inject';
 
 import Injected from './Injected';
 import { notificationHandler } from './NotificationHandler';
-import { RequestMessage, ResponseTypes, TransportRequestMessage, TransportResponseMessage, TransportSubscriptionNotification, ResponseMessage, MessageSeedCreate, MessageTypes } from '../background/types';
+import { RequestMessage, ResponseTypes, TransportRequestMessage, TransportResponseMessage, TransportSubscriptionNotification, ResponseMessage, MessageSeedCreate, MessageTypes, PayloadTypes, NullMessageTypes } from '../background/types';
 
 // when sending a message from the injector to the extension, we
 //  - create an event - this we send to the loader
@@ -30,79 +30,23 @@ let idCounter = 0;
 
 // a generic message sender that creates an event, returning a promise that will
 // resolve once the event is resolved (by the response listener just below this)
-function sendMessage<TRequestMessage extends RequestMessage>(message: TRequestMessage['message'], request: TRequestMessage['payload'] = null, subscriber?: (data: any) => void): Promise<ResponseTypes[TRequestMessage['message']]> {
+function sendMessage<TMessageType extends NullMessageTypes>(message: TMessageType): Promise<ResponseTypes[TMessageType]>;
+function sendMessage<TMessageType extends MessageTypes>(message: TMessageType, request: PayloadTypes[TMessageType], subscriber?: (data: any) => void): Promise<ResponseTypes[TMessageType]>;
+function sendMessage<TMessageType extends MessageTypes>(message: TMessageType, request?: PayloadTypes[TMessageType], subscriber?: (data: any) => void): Promise<ResponseTypes[TMessageType]> {
   return new Promise((resolve, reject): void => {
     const id = `${Date.now()}.${++idCounter}`;
 
     handlers[id] = { resolve, reject, subscriber };
 
-    const transportRequestMessage: TransportRequestMessage<TRequestMessage> = { id, message, origin: 'page', request };
+    const transportRequestMessage: TransportRequestMessage<TMessageType> = {
+      id,
+      message,
+      origin: 'page',
+      request: request || null as PayloadTypes[TMessageType]
+    };
     window.postMessage(transportRequestMessage, '*');
   });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-// a generic message sender that creates an event, returning a promise that will
-// resolve once the event is resolved (by the response listener just below this)
-function sendMessage2<TMessageType extends MessageTypes, TRequestMessage extends RequestMessage>(message: TMessageType, request: TRequestMessage['payload'] = null, subscriber?: (data: any) => void): Promise<ResponseTypes[TMessageType]> {
-  return new Promise((resolve, reject): void => {
-    const id = `${Date.now()}.${++idCounter}`;
-
-    handlers[id] = { resolve, reject, subscriber };
-
-    const transportRequestMessage: TransportRequestMessage<TRequestMessage> = { id, message, origin: 'page', request };
-    window.postMessage(transportRequestMessage, '*');
-  });
-}
-
-async function toast2() {
-  const toto: ResponseTypes['seed.create'] = 12;
-  const ax: boolean = await sendMessage2('seed.create', { length: 12, type: 'ed25519' });
-  const ax: boolean = await sendMessage2('seed.create', true });
-  // const a: boolean = await sendMessage2<MessageSeedCreate>('seed.create', { length: 12, type: 'ed25519' });
-}
-
-
-
-
-type Response = {
-  'a': boolean,
-  'b': number
-}
-
-function myfn<key extends keyof Response>(arg: key): Response[key] {
-  const resp = { a: true, b: 1 };
-  return resp[arg];
-}
-const x: number = myfn('a');
-
-async function toast() {
-  const toto: ResponseTypes['seed.create'] = 12;
-  const ax: boolean = await sendMessage('seed.create', { length: 12, type: 'ed25519'});
-  const a: boolean = await sendMessage<MessageSeedCreate>('seed.create', { length: 12, type: 'ed25519'});
-}
-
-
-
-
-
-
-
-
-
-
-
-
 
 // the enable function, called by the dapp to allow access
 async function enable (origin: string): Promise<Injected> {

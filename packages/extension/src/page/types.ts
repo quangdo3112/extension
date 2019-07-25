@@ -5,5 +5,5 @@
 import { RequestMessage } from '../background/types';
 
 export interface SendRequest {
-  <TRequestMessage extends RequestMessage>(message: TRequestMessage['message'], request?: TRequestMessage['payload'], subscriber ?: (data: any) => void): Promise <any>;
+  <TRequestMessage extends RequestMessage>(message: TRequestMessage['message'], request?: TRequestMessage, subscriber ?: (data: any) => void): Promise <any>;
 }
