@@ -28,7 +28,7 @@ type AuthUrls = Record<string, {
 interface SignRequest {
   id: string;
   request: MessageExtrinsicSign['payload'];
-  resolve: (result: MessageExtrinsicSignResponse['payload']) => void;
+  resolve: (result: MessageExtrinsicSignResponse) => void;
   reject: (error: Error) => void;
   url: string;
 }
@@ -124,8 +124,8 @@ export default class State {
     };
   }
 
-  private signComplete = (id: string, fn: Function): (result: MessageExtrinsicSignResponse['payload'] | Error) => void => {
-    return (result: MessageExtrinsicSignResponse['payload'] | Error): void => {
+  private signComplete = (id: string, fn: Function): (result: MessageExtrinsicSignResponse | Error) => void => {
+    return (result: MessageExtrinsicSignResponse | Error): void => {
       delete this._signRequests[id];
       this.updateIconSign(true);
 
@@ -210,7 +210,7 @@ export default class State {
     return this._signRequests[id];
   }
 
-  public signQueue (url: string, request: MessageExtrinsicSign['payload']): Promise<MessageExtrinsicSignResponse['payload']> {
+  public signQueue (url: string, request: MessageExtrinsicSign['payload']): Promise<MessageExtrinsicSignResponse> {
     const id = getId();
 
     return new Promise((resolve, reject): void => {

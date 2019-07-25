@@ -113,7 +113,7 @@ export default class Extension {
     return true;
   }
 
-  private seedCreate ({ length = SEED_DEFAULT_LENGTH, type }: MessageSeedCreate['payload']): MessageSeedCreateResponse['payload'] {
+  private seedCreate ({ length = SEED_DEFAULT_LENGTH, type }: MessageSeedCreate['payload']): MessageSeedCreateResponse {
     const seed = mnemonicGenerate(length);
 
     return {
@@ -122,7 +122,7 @@ export default class Extension {
     };
   }
 
-  private seedValidate ({ seed, type }: MessageSeedValidate['payload']): MessageSeedValidateResponse['payload'] {
+  private seedValidate ({ seed, type }: MessageSeedValidate['payload']): MessageSeedValidateResponse {
     assert(SEED_LENGTHS.includes(seed.split(' ').length), `Mnemonic needs to contain ${SEED_LENGTHS.join(', ')} words`);
     assert(mnemonicValidate(seed), 'Not a valid mnemonic seed');
 

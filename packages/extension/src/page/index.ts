@@ -6,7 +6,7 @@ import { injectExtension } from '@polkadot/extension-inject';
 
 import Injected from './Injected';
 import { notificationHandler } from './NotificationHandler';
-import { RequestMessage, TransportRequestMessage } from '../background/types';
+import { RequestMessage, ResponseTypes, TransportRequestMessage, TransportResponseMessage, TransportSubscriptionNotification, ResponseMessage, MessageSeedCreate, MessageTypes } from '../background/types';
 
 // when sending a message from the injector to the extension, we
 //  - create an event - this we send to the loader
@@ -30,8 +30,7 @@ let idCounter = 0;
 
 // a generic message sender that creates an event, returning a promise that will
 // resolve once the event is resolved (by the response listener just below this)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function sendMessage<TRequestMessage extends RequestMessage>(message: TRequestMessage['message'], request: TRequestMessage['payload'] = null, subscriber?: (data: any) => void): Promise<any> {
+function sendMessage<TRequestMessage extends RequestMessage>(message: TRequestMessage['message'], request: TRequestMessage['payload'] = null, subscriber?: (data: any) => void): Promise<ResponseTypes[TRequestMessage['message']]> {
   return new Promise((resolve, reject): void => {
     const id = `${Date.now()}.${++idCounter}`;
 
@@ -42,6 +41,69 @@ function sendMessage<TRequestMessage extends RequestMessage>(message: TRequestMe
   });
 }
 
+
+
+
+
+
+
+
+
+
+
+
+// a generic message sender that creates an event, returning a promise that will
+// resolve once the event is resolved (by the response listener just below this)
+function sendMessage2<TMessageType extends MessageTypes, TRequestMessage extends RequestMessage>(message: TMessageType, request: TRequestMessage['payload'] = null, subscriber?: (data: any) => void): Promise<ResponseTypes[TMessageType]> {
+  return new Promise((resolve, reject): void => {
+    const id = `${Date.now()}.${++idCounter}`;
+
+    handlers[id] = { resolve, reject, subscriber };
+
+    const transportRequestMessage: TransportRequestMessage<TRequestMessage> = { id, message, origin: 'page', request };
+    window.postMessage(transportRequestMessage, '*');
+  });
+}
+
+async function toast2() {
+  const toto: ResponseTypes['seed.create'] = 12;
+  const ax: boolean = await sendMessage2('seed.create', { length: 12, type: 'ed25519' });
+  const ax: boolean = await sendMessage2('seed.create', true });
+  // const a: boolean = await sendMessage2<MessageSeedCreate>('seed.create', { length: 12, type: 'ed25519' });
+}
+
+
+
+
+type Response = {
+  'a': boolean,
+  'b': number
+}
+
+function myfn<key extends keyof Response>(arg: key): Response[key] {
+  const resp = { a: true, b: 1 };
+  return resp[arg];
+}
+const x: number = myfn('a');
+
+async function toast() {
+  const toto: ResponseTypes['seed.create'] = 12;
+  const ax: boolean = await sendMessage('seed.create', { length: 12, type: 'ed25519'});
+  const a: boolean = await sendMessage<MessageSeedCreate>('seed.create', { length: 12, type: 'ed25519'});
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 // the enable function, called by the dapp to allow access
 async function enable (origin: string): Promise<Injected> {
   await sendMessage('authorize.tab', { origin });
@@ -49,8 +111,7 @@ async function enable (origin: string): Promise<Injected> {
   return new Injected(sendMessage);
 }
 
-// todo put this in next commit
-function handleResponse({data, source}) {
+function handleResponse<TResponseMessage extends ResponseMessage>(data: TransportResponseMessage<TResponseMessage>) {
   const handler = handlers[data.id];
 
   if (!handler) {
@@ -71,7 +132,7 @@ function handleResponse({data, source}) {
   }
 }
 
-function handleNotification({data, source}) {
+function handleNotification(data: TransportSubscriptionNotification) {
   notificationHandler.emit('message', data);
 }
 
@@ -83,10 +144,10 @@ window.addEventListener('message', ({ data, source }): void => {
   }
 
   if (data.id) {
-    handleResponse({data, source});
+    handleResponse(data);
   }
   else {
-    handleNotification({data, source})
+    handleNotification(data);
   }
 });
 

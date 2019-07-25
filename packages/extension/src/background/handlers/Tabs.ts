@@ -55,7 +55,7 @@ export default class Tabs {
     return true;
   }
 
-  private extrinsicSign (url: string, request: MessageExtrinsicSign['payload']): Promise<MessageExtrinsicSignResponse['payload']> {
+  private extrinsicSign (url: string, request: MessageExtrinsicSign['payload']): Promise<MessageExtrinsicSignResponse> {
     const { address } = request;
     const pair = keyring.getPair(address);
 
@@ -64,7 +64,6 @@ export default class Tabs {
     return this.state.signQueue(url, request);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public async handle<TRequestMessage extends RequestMessage>(id: string, type: TRequestMessage['message'], request: TRequestMessage['payload'], url: string, port: chrome.runtime.Port): Promise<any> {
     if (type !== 'authorize.tab') {
       this.state.ensureUrlAuthorized(url);
